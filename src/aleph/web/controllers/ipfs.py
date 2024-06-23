@@ -14,8 +14,9 @@ from aleph.web.controllers.utils import file_field_to_io, add_grace_period_for_f
 
 
 async def ipfs_add_file(request: web.Request):
+    grace_period: int
+
     config = get_config_from_request(request)
-    grace_period = config.storage.grace_period.value
 
     ipfs_service = get_ipfs_service_from_request(request)
     if ipfs_service is None:
@@ -29,6 +30,11 @@ async def ipfs_add_file(request: web.Request):
         file_field = post["file"]
     except KeyError:
         raise web.HTTPUnprocessableEntity(reason="Missing 'file' in multipart form.")
+
+    try:
+        grace_period = int(post["grace_period"])
+    except (KeyError, ValueError):
+        grace_period = config.storage.grace_period.value
 
     file_content: bytes
     if isinstance(file_field, bytes):
